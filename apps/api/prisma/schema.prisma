@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Activity {
+  id              String         @id
+  title           String
+  category        String
+  area            String
+  durationMinutes Int
+  priceLevel      Int
+  rating          Float
+  imageUrl        String
+  description     String
+  tags            String[]
+  planActivities  PlanActivity[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Plan {
+  id             String         @id
+  name           String
+  date           DateTime       @db.Date
+  notes          String?
+  planActivities PlanActivity[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model PlanActivity {
+  planId     String
+  activityId String
+  position   Int
+  plan       Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Restrict)
+
+  @@id([planId, activityId])
+  @@index([activityId])
+}

@@ -1,0 +1,16 @@
+{
+  "name": "trip-picks",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "apps/*"
+  ]
+}
