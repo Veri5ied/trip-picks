@@ -16,7 +16,7 @@ const activities = [
     durationMinutes: 90,
     priceLevel: 2,
     rating: 4.8,
-    imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5",
+    imageUrl: "https://images.unsplash.com/photo-1618828665011-0abd973f7bb8?w=800&q=85",
     description:
       "Browse contemporary African art in one of Lagos' best-known galleries.",
     tags: ["art", "indoor", "culture"],
@@ -29,7 +29,7 @@ const activities = [
     durationMinutes: 120,
     priceLevel: 2,
     rating: 4.6,
-    imageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+    imageUrl: "https://images.unsplash.com/photo-1649502913092-fb7f0e8fc632?w=800&q=85",
     description:
       "Walk the canopy bridge and explore a quiet nature reserve in the city.",
     tags: ["nature", "outdoor", "walk"],
@@ -42,7 +42,7 @@ const activities = [
     durationMinutes: 180,
     priceLevel: 2,
     rating: 4.4,
-    imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+    imageUrl: "https://images.unsplash.com/photo-1618828665347-d870c38c95c7?w=800&q=85",
     description:
       "Take a boat ride to a relaxed beach spot for swimming, surfing, and sun.",
     tags: ["beach", "outdoor", "water"],
@@ -55,7 +55,7 @@ const activities = [
     durationMinutes: 120,
     priceLevel: 3,
     rating: 4.7,
-    imageUrl: "https://images.unsplash.com/photo-1518998053901-5348d3961a04",
+    imageUrl: "https://images.unsplash.com/photo-1526735334552-daff0bd6d53f?w=800&q=85",
     description:
       "Enjoy Nigerian food, books, theatre, and cultural exhibitions in one venue.",
     tags: ["culture", "food", "theatre"],
@@ -68,7 +68,7 @@ const activities = [
     durationMinutes: 75,
     priceLevel: 1,
     rating: 4.3,
-    imageUrl: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205",
+    imageUrl: "https://images.unsplash.com/photo-1587590010936-300da0d70b9e?w=800&q=85",
     description:
       "Visit a historic public park with live events, memorials, and open courtyards.",
     tags: ["history", "outdoor", "music"],
@@ -81,7 +81,7 @@ const activities = [
     durationMinutes: 120,
     priceLevel: 1,
     rating: 4.1,
-    imageUrl: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e",
+    imageUrl: "https://images.unsplash.com/photo-1648023199223-25d3622bcb13?w=800&q=85",
     description:
       "Explore one of Lagos' busiest markets for fabrics, fashion, and local finds.",
     tags: ["shopping", "market", "fashion"],
@@ -94,10 +94,23 @@ const activities = [
     durationMinutes: 60,
     priceLevel: 2,
     rating: 4.6,
-    imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f",
+    imageUrl: "https://images.unsplash.com/photo-1573662766191-066ba9570a4b?w=800&q=85",
     description:
       "Browse records, books, and coffee in a beloved Lagos music and culture shop.",
     tags: ["music", "books", "indoor"],
+  },
+  {
+    id: "act_008",
+    title: "Eko Hotel Main Bar",
+    category: "Food",
+    area: "Victoria Island",
+    durationMinutes: 90,
+    priceLevel: 3,
+    rating: 4.2,
+    imageUrl: "https://images.unsplash.com/photo-1648023200358-9dc050df521d?w=800&q=85",
+    description:
+      "Enjoy cocktails and live music at one of Lagos' most iconic hotel bars.",
+    tags: ["food", "drinks", "nightlife"],
   },
 ];
 

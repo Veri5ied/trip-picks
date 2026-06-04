@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #06b16a;
+  --color-surface: #1a1a1a;
+  --color-card: #222;
+  --color-muted: #888;
+}
+
+body {
+  background: #111;
+  color: #fff;
+  font-family:
+    "DM Sans",
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* masonry */
+.masonry {
+  column-count: 3;
+  column-gap: 16px;
+}
+.masonry > * {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+@media (max-width: 768px) {
+  .masonry {
+    column-count: 2;
+    column-gap: 12px;
+  }
+  .masonry > * {
+    margin-bottom: 12px;
+  }
+}
+@media (max-width: 480px) {
+  .masonry {
+    column-count: 2;
+    column-gap: 10px;
+  }
+  .masonry > * {
+    margin-bottom: 10px;
+  }
+}
+
+/* skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+.skel {
+  background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 16px;
+}
+
+/* fade in */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in {
+  animation: fade-in 0.35s ease-out both;
+}

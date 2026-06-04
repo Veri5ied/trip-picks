@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run dev --workspaces",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w @trip-picks/api\" \"npm run dev -w @trip-picks/web\"",
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
@@ -12,5 +12,8 @@
   "packageManager": "npm@10.9.2",
   "workspaces": [
     "apps/*"
-  ]
+  ],
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
 }
