@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { GoeyToaster } from "goey-toast";
+import { GooeyToaster } from "goey-toast";
 import { AuthProvider } from "@/lib/auth-context";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -22,7 +22,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         {children}
-        <GoeyToaster position="top-right" />
+        <GooeyToaster position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
   );
