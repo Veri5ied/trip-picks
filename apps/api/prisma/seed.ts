@@ -1,6 +1,8 @@
 import "dotenv/config";
+import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { createId } from "../src/lib/id.js";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -124,6 +126,19 @@ async function main() {
       create: activity,
     });
   }
+
+  const password = await bcrypt.hash("password123", 12);
+  await prisma.user.upsert({
+    where: { email: "demo@trip-picks.app" },
+    update: {},
+    create: {
+      id: createId("user"),
+      email: "demo@trip-picks.app",
+      password,
+    },
+  });
+
+  console.log("Seeded: 8 activities, 1 user (demo@trip-picks.app / password123)");
 }
 
 main()

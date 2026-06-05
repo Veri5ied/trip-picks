@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { gooeyToast } from "goey-toast";
+import { toast } from "sonner";
 import { fetchFavorites, addFavorite, removeFavorite } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -63,13 +63,13 @@ export function useFavorites() {
           if (next.has(id)) {
             next.delete(id);
             removeMutation.mutate(id);
-            gooeyToast.success("Removed from saved", {
+            toast.success("Removed from saved", {
               description: "Activity removed from your favorites",
             });
           } else {
             next.add(id);
             addMutation.mutate(id);
-            gooeyToast.success("Saved to favorites", {
+            toast.success("Saved to favorites", {
               description: "Activity added to your saved list",
             });
           }
