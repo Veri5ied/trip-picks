@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { fetchActivities } from "@/lib/api";
-import { useSaved } from "@/lib/use-saved";
+import { useFavorites } from "@/lib/use-favorites";
 import ActivityCard from "@/components/activity-card";
 import SkeletonCard from "@/components/skeleton-card";
 
@@ -13,7 +13,7 @@ const SKELETON_COUNT = 6;
 
 export default function SavedPage() {
   const router = useRouter();
-  const { saved, toggleSave } = useSaved();
+  const { saved, toggleSave } = useFavorites();
 
   const { data, isLoading } = useQuery({
     queryKey: ["activities", "all"],

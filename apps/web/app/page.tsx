@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { fetchActivities } from "@/lib/api";
 import { useDebounce } from "@/lib/use-debounce";
-import { useSaved } from "@/lib/use-saved";
+import { useFavorites } from "@/lib/use-favorites";
 import TopBar from "@/components/top-bar";
 import FilterPills from "@/components/filter-pills";
 import ActivityGrid from "@/components/activity-grid";
@@ -16,7 +16,7 @@ export default function HomePage() {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [modalId, setModalId] = useState<string | null>(null);
-  const { saved, toggleSave } = useSaved();
+  const { saved, toggleSave } = useFavorites();
 
   const debouncedSearch = useDebounce(search, 300);
 

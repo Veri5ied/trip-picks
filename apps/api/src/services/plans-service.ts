@@ -23,12 +23,13 @@ const planInclude = {
 
 type PlanWithActivities = PlanGetPayload<{ include: typeof planInclude }>;
 
-export async function createPlan(prisma: PrismaClient, input: CreatePlanInput) {
+export async function createPlan(prisma: PrismaClient, userId: string, input: CreatePlanInput) {
   await ensureActivitiesExist(prisma, input.activityIds);
 
   const plan = await prisma.plan.create({
     data: {
       id: createId("plan"),
+      userId,
       name: input.name,
       date: new Date(input.date),
       notes: input.notes,
@@ -45,11 +46,19 @@ export async function createPlan(prisma: PrismaClient, input: CreatePlanInput) {
   return serializePlan(plan as PlanWithActivities);
 }
 
+export async function listPlans(prisma: PrismaClient, userId: string) {
+  const plans = await prisma.plan.findMany({
+    where: { userId },
+    include: planInclude,
+    orderBy: { date: "desc" },
+  });
+
+  return plans.map((p) => serializePlan(p as PlanWithActivities));
+}
+
 export async function getPlanById(prisma: PrismaClient, id: string) {
   const plan = await prisma.plan.findUnique({
-    where: {
-      id,
-    },
+    where: { id },
     include: planInclude,
   });
 
@@ -63,28 +72,29 @@ export async function getPlanById(prisma: PrismaClient, id: string) {
 export async function updatePlan(
   prisma: PrismaClient,
   id: string,
+  userId: string,
   input: UpdatePlanInput,
 ) {
-  await getPlanById(prisma, id);
+  const plan = await getPlanById(prisma, id);
+
+  if (plan.userId !== userId) {
+    throw badRequest("Plan does not belong to you");
+  }
 
   if (input.activityIds) {
     await ensureActivitiesExist(prisma, input.activityIds);
   }
 
-  const plan = await prisma.$transaction(
+  const updated = await prisma.$transaction(
     async (tx: Prisma.TransactionClient) => {
       if (input.activityIds) {
         await tx.planActivity.deleteMany({
-          where: {
-            planId: id,
-          },
+          where: { planId: id },
         });
       }
 
       return tx.plan.update({
-        where: {
-          id,
-        },
+        where: { id },
         data: {
           name: input.name,
           date: input.date ? new Date(input.date) : undefined,
@@ -103,7 +113,7 @@ export async function updatePlan(
     },
   );
 
-  return serializePlan(plan as PlanWithActivities);
+  return serializePlan(updated as PlanWithActivities);
 }
 
 async function ensureActivitiesExist(
@@ -113,9 +123,7 @@ async function ensureActivitiesExist(
   const uniqueIds = [...new Set(activityIds)];
   const count = await prisma.activity.count({
     where: {
-      id: {
-        in: uniqueIds,
-      },
+      id: { in: uniqueIds },
     },
   });
 
@@ -127,6 +135,7 @@ async function ensureActivitiesExist(
 function serializePlan(plan: PlanWithActivities) {
   return {
     id: plan.id,
+    userId: plan.userId,
     name: plan.name,
     date: plan.date.toISOString().slice(0, 10),
     activityIds: plan.planActivities.map((item) => item.activityId),

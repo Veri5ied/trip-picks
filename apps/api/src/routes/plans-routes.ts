@@ -6,9 +6,11 @@ import {
 } from "../schemas/plans-schemas.js";
 import {
   createPlan,
+  listPlans,
   getPlanById,
   updatePlan,
 } from "../services/plans-service.js";
+import { requireAuth } from "../lib/auth-hook.js";
 
 const activityRef = {
   type: "object",
@@ -30,6 +32,7 @@ const planResponseSchema = {
   type: "object",
   properties: {
     id: { type: "string" },
+    userId: { type: "string" },
     name: { type: "string" },
     date: { type: "string" },
     activityIds: {
@@ -69,23 +72,22 @@ const createPlanBodySchema = {
   required: ["name", "date", "activityIds"],
 };
 
-const updatePlanBodySchema = {
-  type: "object",
-  properties: {
-    name: { type: "string" },
-    date: { type: "string", format: "date" },
-    activityIds: {
-      type: "array",
-      items: { type: "string" },
-    },
-    notes: { type: "string" },
-  },
-};
-
 export async function plansRoutes(app: FastifyInstance) {
+  app.get(
+    "/plans",
+    {
+      preHandler: [requireAuth],
+    },
+    async (request) => {
+      const plans = await listPlans(app.prisma, request.userId!);
+      return { data: plans };
+    },
+  );
+
   app.post(
     "/plans",
     {
+      preHandler: [requireAuth],
       schema: {
         tags: ["Plans"],
         description: "Create a new day plan",
@@ -102,7 +104,7 @@ export async function plansRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const body = createPlanSchema.parse(request.body);
-      const plan = await createPlan(app.prisma, body);
+      const plan = await createPlan(app.prisma, request.userId!, body);
 
       reply.status(201);
 
@@ -154,11 +156,23 @@ export async function plansRoutes(app: FastifyInstance) {
   app.patch(
     "/plans/:id",
     {
+      preHandler: [requireAuth],
       schema: {
         tags: ["Plans"],
         description: "Update a plan (partial update)",
         params: idParamSchema,
-        body: updatePlanBodySchema,
+        body: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            date: { type: "string", format: "date" },
+            activityIds: {
+              type: "array",
+              items: { type: "string" },
+            },
+            notes: { type: "string" },
+          },
+        },
         response: {
           200: {
             type: "object",
@@ -172,7 +186,7 @@ export async function plansRoutes(app: FastifyInstance) {
     async (request) => {
       const params = planParamsSchema.parse(request.params);
       const body = updatePlanSchema.parse(request.body);
-      const plan = await updatePlan(app.prisma, params.id, body);
+      const plan = await updatePlan(app.prisma, params.id, request.userId!, body);
 
       return {
         data: plan,
