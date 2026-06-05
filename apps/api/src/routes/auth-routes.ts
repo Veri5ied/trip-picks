@@ -3,12 +3,6 @@ import { signupSchema, loginSchema } from "../schemas/auth-schemas.js";
 import { signup, login, getUserById } from "../services/auth-service.js";
 
 export async function authRoutes(app: FastifyInstance) {
-  app.addHook("onRequest", async (request) => {
-    // Signed cookie is auto-verified by @fastify/cookie
-    // If valid, the value is in request.cookies.userId
-    // If tampered, it's undefined
-    request.userId = request.cookies.userId;
-  });
 
   app.post("/auth/signup", async (request, reply) => {
     const body = signupSchema.parse(request.body);

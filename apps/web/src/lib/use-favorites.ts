@@ -27,17 +27,17 @@ export function useFavorites() {
   const queryClient = useQueryClient();
   const [saved, setSaved] = useState<Set<string>>(new Set());
 
-  const { data: apiSaved = [] } = useQuery({
+  const { data } = useQuery({
     queryKey: ["favorites"],
     queryFn: fetchFavorites,
     enabled: !!user,
   });
 
   useEffect(() => {
-    if (user) {
-      setSaved(new Set(apiSaved.map((a) => a.id)));
+    if (user && data) {
+      setSaved(new Set(data.map((a) => a.id)));
     }
-  }, [user, apiSaved]);
+  }, [user, data]);
 
   useEffect(() => {
     if (!user) {

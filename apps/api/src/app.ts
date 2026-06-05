@@ -25,6 +25,10 @@ export async function buildApp() {
     });
   });
 
+  app.addHook("onRequest", async (request) => {
+    request.userId = request.cookies.userId;
+  });
+
   await app.register(sensiblePlugin);
   await app.register(corsPlugin);
   await app.register(cookie, { secret: env.COOKIE_SECRET });
