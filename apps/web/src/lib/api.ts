@@ -98,3 +98,36 @@ export async function removeFavorite(activityId: string) {
   const { data } = await api.delete(`/favorites/${activityId}`);
   return data;
 }
+
+export async function fetchPlans() {
+  const { data } = await api.get<{ data: Plan[] }>("/plans");
+  return data.data;
+}
+
+export async function createPlan(input: {
+  name: string;
+  date: string;
+  activityIds: string[];
+  notes?: string;
+}) {
+  const { data } = await api.post<{ data: Plan }>("/plans", input);
+  return data.data;
+}
+
+export async function getPlan(id: string) {
+  const { data } = await api.get<{ data: Plan }>(`/plans/${id}`);
+  return data.data;
+}
+
+export async function updatePlan(
+  id: string,
+  input: {
+    name?: string;
+    date?: string;
+    activityIds?: string[];
+    notes?: string;
+  },
+) {
+  const { data } = await api.patch<{ data: Plan }>(`/plans/${id}`, input);
+  return data.data;
+}

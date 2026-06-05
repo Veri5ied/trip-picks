@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bookmark, User, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bookmark, Calendar, User, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import AuthModal from "./auth-modal";
 
@@ -19,6 +20,7 @@ export default function TopBar({
   onSavedClick,
 }: TopBarProps) {
   const { user, logout, loading } = useAuth();
+  const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -60,6 +62,13 @@ export default function TopBar({
               {savedCount > 9 ? "9+" : savedCount}
             </span>
           )}
+        </button>
+        <button
+          onClick={() => (user ? router.push("/plans") : setAuthOpen(true))}
+          className="flex items-center justify-center size-10.5 rounded-full bg-[#2a2a2a] text-[#999] hover:bg-[#333] hover:text-white transition-colors max-sm:size-9"
+          title={user ? "Plans" : "Sign in"}
+        >
+          <Calendar size={18} />
         </button>
 
         {!loading && (

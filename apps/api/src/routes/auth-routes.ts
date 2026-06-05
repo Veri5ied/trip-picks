@@ -11,7 +11,8 @@ export async function authRoutes(app: FastifyInstance) {
     reply.setCookie("userId", user.id, {
       signed: true,
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "none",
+      secure: true,
       path: "/",
       maxAge: 7 * 24 * 60 * 60,
     });
@@ -26,7 +27,8 @@ export async function authRoutes(app: FastifyInstance) {
     reply.setCookie("userId", user.id, {
       signed: true,
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "none",
+      secure: true,
       path: "/",
       maxAge: 7 * 24 * 60 * 60,
     });
@@ -35,7 +37,11 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/auth/logout", async (_request, reply) => {
-    reply.clearCookie("userId", { path: "/" });
+    reply.clearCookie("userId", {
+      path: "/",
+      sameSite: "none",
+      secure: true,
+    });
     return { data: { ok: true } };
   });
 
