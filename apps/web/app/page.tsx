@@ -11,7 +11,7 @@ import FilterPills from "@/components/filter-pills";
 import ActivityGrid from "@/components/activity-grid";
 import ActivityModal from "@/components/activity-modal";
 
-export default function HomePage() {
+export default function Page() {
   const router = useRouter();
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");

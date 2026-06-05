@@ -11,7 +11,7 @@ import SkeletonCard from "@/components/skeleton-card";
 
 const SKELETON_COUNT = 6;
 
-export default function SavedPage() {
+export default function Page() {
   const router = useRouter();
   const { saved, toggleSave } = useFavorites();
 
@@ -31,9 +31,9 @@ export default function SavedPage() {
         <div className="mx-auto max-w-225 px-6 py-4 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center justify-center size-9 rounded-full bg-[#2a2a2a] text-white hover:bg-[#333] transition-colors"
+            className="flex items-center justify-center size-8 text-[#777] hover:text-white transition-colors -ml-1"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={22} />
           </button>
           <div>
             <h1 className="text-lg font-bold">Saved Picks</h1>
