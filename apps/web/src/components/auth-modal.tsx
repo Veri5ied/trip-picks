@@ -50,7 +50,8 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     } catch (err: unknown) {
       const msg =
         err && typeof err === "object" && "response" in err
-          ? (err as { response: { data: { error: { message: string } } } }).response?.data?.error?.message
+          ? (err as { response: { data: { error: { message: string } } } })
+              .response?.data?.error?.message
           : "Something went wrong";
       setError(msg ?? "Something went wrong");
     } finally {
@@ -59,9 +60,12 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-sm rounded-2xl bg-[#1a1a1a] p-6 shadow-xl"
+        className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -78,7 +82,10 @@ export default function AuthModal({ onClose }: AuthModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
-            <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#666]" />
+            <Mail
+              size={16}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#666]"
+            />
             <input
               type="email"
               placeholder="Email"
@@ -90,7 +97,10 @@ export default function AuthModal({ onClose }: AuthModalProps) {
           </div>
 
           <div className="relative">
-            <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#666]" />
+            <Lock
+              size={16}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#666]"
+            />
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
@@ -107,9 +117,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             </button>
           </div>
 
-          {error && (
-            <p className="text-xs text-red-400">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-400">{error}</p>}
 
           <button
             type="submit"
@@ -126,7 +134,10 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             <>
               Don't have an account?{" "}
               <button
-                onClick={() => { setMode("signup"); setError(""); }}
+                onClick={() => {
+                  setMode("signup");
+                  setError("");
+                }}
                 className="text-accent hover:underline"
               >
                 Sign up
@@ -136,7 +147,10 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             <>
               Already have an account?{" "}
               <button
-                onClick={() => { setMode("login"); setError(""); }}
+                onClick={() => {
+                  setMode("login");
+                  setError("");
+                }}
                 className="text-accent hover:underline"
               >
                 Sign in
