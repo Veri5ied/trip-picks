@@ -1,7 +1,18 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { fetchMe, login as apiLogin, signup as apiSignup, logout as apiLogout } from "@/lib/api";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  fetchMe,
+  login as apiLogin,
+  signup as apiSignup,
+  logout as apiLogout,
+} from "@/lib/api";
 
 interface User {
   id: string;
