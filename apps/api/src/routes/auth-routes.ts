@@ -1,15 +1,21 @@
 import type { FastifyInstance } from "fastify";
 import { signupSchema, loginSchema } from "../schemas/auth-schemas.js";
 import { signup, login, getUserById } from "../services/auth-service.js";
-import { createSession, deleteSession } from "../lib/session.js";
 
 export async function authRoutes(app: FastifyInstance) {
+  app.addHook("onRequest", async (request) => {
+    // Signed cookie is auto-verified by @fastify/cookie
+    // If valid, the value is in request.cookies.userId
+    // If tampered, it's undefined
+    request.userId = request.cookies.userId;
+  });
+
   app.post("/auth/signup", async (request, reply) => {
     const body = signupSchema.parse(request.body);
     const user = await signup(app.prisma, body);
-    const token = createSession(user.id);
 
-    reply.setCookie("session", token, {
+    reply.setCookie("userId", user.id, {
+      signed: true,
       httpOnly: true,
       sameSite: "lax",
       path: "/",
@@ -22,9 +28,9 @@ export async function authRoutes(app: FastifyInstance) {
   app.post("/auth/login", async (request, reply) => {
     const body = loginSchema.parse(request.body);
     const user = await login(app.prisma, body);
-    const token = createSession(user.id);
 
-    reply.setCookie("session", token, {
+    reply.setCookie("userId", user.id, {
+      signed: true,
       httpOnly: true,
       sameSite: "lax",
       path: "/",
@@ -35,25 +41,17 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/auth/logout", async (_request, reply) => {
-    const token = reply.request.cookies.session;
-    if (token) deleteSession(token);
-    reply.clearCookie("session", { path: "/" });
+    reply.clearCookie("userId", { path: "/" });
     return { data: { ok: true } };
   });
 
   app.get("/auth/me", async (request) => {
-    const token = request.cookies.session;
-    if (!token) {
+    const userId = request.userId;
+    if (!userId) {
       return { data: null };
     }
 
-    const { getSession } = await import("../lib/session.js");
-    const session = getSession(token);
-    if (!session) {
-      return { data: null };
-    }
-
-    const user = await getUserById(app.prisma, session.userId);
+    const user = await getUserById(app.prisma, userId);
     return { data: user };
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bookmark, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bookmark, User, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import AuthModal from "./auth-modal";
 
@@ -21,8 +21,22 @@ export default function TopBar({
   const { user, logout, loading } = useAuth();
   const [hydrated, setHydrated] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
 
   return (
     <>
@@ -49,13 +63,30 @@ export default function TopBar({
         </button>
 
         {!loading && (
-          <button
-            onClick={() => (user ? logout() : setAuthOpen(true))}
-            className="flex items-center justify-center size-10.5 rounded-full bg-[#2a2a2a] text-[#999] hover:bg-[#333] hover:text-white transition-colors max-sm:size-9"
-            title={user ? "Sign out" : "Sign in"}
-          >
-            <User size={18} />
-          </button>
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={() => (user ? setMenuOpen((p) => !p) : setAuthOpen(true))}
+              className="flex items-center justify-center size-10.5 rounded-full bg-[#2a2a2a] text-[#999] hover:bg-[#333] hover:text-white transition-colors max-sm:size-9"
+              title={user ? "Account" : "Sign in"}
+            >
+              <User size={18} />
+            </button>
+
+            {user && menuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-52 rounded-xl bg-[#1a1a1a] border border-[#333] shadow-xl overflow-hidden">
+                <div className="px-4 py-3 text-sm text-[#bbb] border-b border-[#2a2a2a] truncate">
+                  {user.email}
+                </div>
+                <button
+                  onClick={() => { logout(); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-[#ddd] hover:bg-[#2a2a2a] transition-colors"
+                >
+                  <LogOut size={16} />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </header>
 

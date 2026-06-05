@@ -27,7 +27,7 @@ export async function buildApp() {
 
   await app.register(sensiblePlugin);
   await app.register(corsPlugin);
-  await app.register(cookie);
+  await app.register(cookie, { secret: env.COOKIE_SECRET });
   await app.register(prismaPlugin);
   await app.register(swaggerPlugin);
 
