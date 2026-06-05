@@ -22,7 +22,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         {children}
-        <GooeyToaster position="top-right" />
+        <GooeyToaster position="top-right" theme="dark" />
       </AuthProvider>
     </QueryClientProvider>
   );
