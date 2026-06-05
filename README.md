@@ -90,22 +90,30 @@ Password: password123
 ## What I'd improve next
 
 **Backend**
-- Add `position` field sorting to plan detail endpoint so reordered activities persist
-- Add `DELETE /favorites/:id` (currently only supports removing by activityId)
-- Add rate limiting and request validation error formatting
-- Seed more activities (15-20) with varied areas, categories, and price levels
+- Persist activity reorder via `position` on plan detail endpoint
+- `DELETE /favorites/:id` (only supports removal by activityId)
+- Rate limiting + validation error formatting
+- Seed 15-20 activities with more varied areas, categories, price levels
 
-**Frontend**
-- Drag-to-reorder activities in the plan detail timeline using `@dnd-kit`
-- Embed a map (Leaflet) on the plan detail page showing pinned activity locations
-- Filter chips in the search bar: show active filters as removable chips below the search input
-- Activity modal: display all tags (first 3 are currently hidden)
-- Plan creation: disable the submit button visually when 0 activities selected (backend already blocks it)
-- Stagger-fade-in animation on the timeline stops when the plan detail page loads
+**UI**
+- Drag-to-reorder in plan timeline (`@dnd-kit`)
+- Leaflet map on plan detail with pinned activity locations
+- Removable filter chips below search bar
+- Show all tags in activity modal (first 3 hidden)
+- Disable create-plan button when 0 activities selected (backend already blocks)
+- Stagger-fade-in timeline stops on page load
 
 **UX**
-- Native-feeling bottom sheets on mobile for modals (auth, activity detail, filters)
-- Swipe gestures: swipe left on a plan card to delete, swipe right to mark as done (maybe I am overthinking it but should have a good ux imo)
+- Native bottom sheets on mobile for modals
+- PWA manifest + service worker for installable mobile app
+- Swipe gestures: left to delete plan, right to mark done (sounds good hehehehe)
+
+**Structure**
+- **pnpm workspaces** for content-addressable disk storage + strict dependency isolation
+- **`packages/shared`** for shared types (Activity, Plan, User, Zod schemas) to eliminate API/Web duplication
+- **Turborepo** for cached builds and typechecking
+- **Docker Compose** with PostgreSQL + API so new contributors run one command
+- Root-level **ESLint + Prettier** config
 
 ## Tradeoffs
 
