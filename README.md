@@ -30,6 +30,7 @@ Create `apps/api/.env`:
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/trip_picks?schema=public"
+SESSION_SECRET="your-random-secret-at-least-16-chars"
 ```
 
 ### Migrate & Seed
