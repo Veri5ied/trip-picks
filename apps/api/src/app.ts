@@ -25,13 +25,17 @@ export async function buildApp() {
     });
   });
 
-  app.addHook("onRequest", async (request) => {
-    request.userId = request.cookies.userId;
-  });
-
   await app.register(sensiblePlugin);
   await app.register(corsPlugin);
   await app.register(cookie, { secret: env.COOKIE_SECRET });
+
+  app.addHook("onRequest", async (request) => {
+    const raw = request.cookies?.userId;
+    if (raw) {
+      const unsigned = request.unsignCookie(raw);
+      request.userId = unsigned.valid ? unsigned.value : undefined;
+    }
+  });
   await app.register(prismaPlugin);
   await app.register(swaggerPlugin);
 

@@ -78,33 +78,6 @@ Swagger UI: `http://localhost:4000/docs`
 | `npm run typecheck` | TypeScript check all workspaces |
 | `npm run test` | Run tests |
 
-## Deploy
-
-### Render (API)
-
-1. New Web Service → connect repo
-2. **Root directory**: `/`
-3. **Build**: `npm install && cd apps/api && npx prisma generate && npm run build && npx prisma migrate deploy && npm run seed`
-4. **Start**: `node apps/api/dist/src/server.js`
-5. **Env vars** (Render dashboard):
-
-```
-DATABASE_URL=<neondb-connection-string>
-WEB_ORIGIN=https://<vercel-app>.vercel.app
-COOKIE_SECRET=<random-64-char-hex>
-```
-
-### Vercel (Web)
-
-1. New project → connect repo
-2. **Root directory**: `apps/web`
-3. **Framework**: Next.js
-4. **Env var**:
-
-```
-NEXT_PUBLIC_API_URL=https://<render-app>.onrender.com
-```
-
 ## Demo
 
 After seeding, sign in with:

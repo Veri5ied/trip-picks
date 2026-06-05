@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchFavorites, addFavorite, removeFavorite } from "@/lib/api";
@@ -22,10 +22,15 @@ function writeLocal(ids: Set<string>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
 }
 
+function clearLocal() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
 export function useFavorites() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [saved, setSaved] = useState<Set<string>>(new Set());
+  const prevUser = useRef(user);
 
   const { data } = useQuery({
     queryKey: ["favorites"],
@@ -45,6 +50,19 @@ export function useFavorites() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user && !prevUser.current) {
+      const local = readLocal();
+      if (local.size > 0) {
+        Promise.allSettled([...local].map((id) => addFavorite(id))).then(() => {
+          clearLocal();
+          queryClient.invalidateQueries({ queryKey: ["favorites"] });
+        });
+      }
+    }
+    prevUser.current = user;
+  }, [user, queryClient]);
+
   const addMutation = useMutation({
     mutationFn: addFavorite,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["favorites"] }),
@@ -58,24 +76,29 @@ export function useFavorites() {
   const toggleSave = useCallback(
     (id: string) => {
       if (user) {
+        const wasSaved = saved.has(id);
         setSaved((prev) => {
           const next = new Set(prev);
           if (next.has(id)) {
             next.delete(id);
-            removeMutation.mutate(id);
-            toast.success("Removed from saved", {
-              description: "Activity removed from your favorites",
-            });
           } else {
             next.add(id);
-            addMutation.mutate(id);
-            toast.success("Saved to favorites", {
-              description: "Activity added to your saved list",
-            });
           }
           return next;
         });
+        if (wasSaved) {
+          removeMutation.mutate(id);
+          toast.success("Removed from saved", {
+            description: "Activity removed from your favorites",
+          });
+        } else {
+          addMutation.mutate(id);
+          toast.success("Saved to favorites", {
+            description: "Activity added to your saved list",
+          });
+        }
       } else {
+        const wasSaved = saved.has(id);
         setSaved((prev) => {
           const next = new Set(prev);
           if (next.has(id)) {
@@ -86,9 +109,18 @@ export function useFavorites() {
           writeLocal(next);
           return next;
         });
+        if (wasSaved) {
+          toast.success("Removed from saved", {
+            description: "Activity removed from your saved list",
+          });
+        } else {
+          toast.success("Saved to favorites", {
+            description: "Activity added to your saved list",
+          });
+        }
       }
     },
-    [user, addMutation, removeMutation],
+    [user, saved, addMutation, removeMutation],
   );
 
   return { saved, toggleSave };
