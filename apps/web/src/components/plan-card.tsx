@@ -2,20 +2,7 @@
 
 import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react";
 import type { Plan } from "@/lib/api";
-
-function imgUrl(url: string) {
-  const base = url.split("?")[0];
-  return `${base}?w=200&q=60`;
-}
-
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { imgUrl, formatDate } from "@/lib/utils";
 
 interface PlanCardProps {
   plan: Plan;
@@ -28,12 +15,17 @@ export default function PlanCard({ plan, onSelect }: PlanCardProps) {
   const remaining = plan.activities.length - 3;
 
   return (
-    <div className="group rounded-2xl bg-surface border border-[#2a2a2a] overflow-hidden hover:border-[#3a3a3a] transition-all cursor-pointer">
+    <div
+      onClick={onSelect}
+      className="group rounded-2xl bg-surface border border-[#2a2a2a] overflow-hidden hover:border-[#3a3a3a] transition-all cursor-pointer"
+    >
       {previews.length > 0 && (
         <div className="relative h-36 overflow-hidden max-sm:h-32">
           <div
             className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
-            style={{ backgroundImage: `url(${imgUrl(previews[0].imageUrl)})` }}
+            style={{
+              backgroundImage: `url(${imgUrl(previews[0].imageUrl, 200, 60)})`,
+            }}
           />
           <div className="absolute inset-0 bg-linear-to-t from-surface via-surface/40 to-transparent" />
           {previews.length > 1 && (
@@ -42,7 +34,9 @@ export default function PlanCard({ plan, onSelect }: PlanCardProps) {
                 <div
                   key={a.id}
                   className="size-7 rounded-lg bg-cover bg-center ring-2 ring-surface"
-                  style={{ backgroundImage: `url(${imgUrl(a.imageUrl)})` }}
+                  style={{
+                    backgroundImage: `url(${imgUrl(a.imageUrl, 200, 60)})`,
+                  }}
                 />
               ))}
               {remaining > 0 && (

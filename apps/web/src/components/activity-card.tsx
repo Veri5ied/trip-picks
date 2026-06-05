@@ -2,15 +2,7 @@
 
 import { Star } from "lucide-react";
 import type { Activity } from "@/lib/api";
-
-function imgUrl(url: string) {
-  const base = url.split("?")[0];
-  return `${base}?w=400&q=80`;
-}
-
-function priceLabel(level: number) {
-  return ["Budget", "Moderate", "Premium"][Math.min(Math.max(level, 1), 3) - 1];
-}
+import { priceLabel, imgUrl } from "@/lib/utils";
 
 interface ActivityCardProps {
   activity: Activity;

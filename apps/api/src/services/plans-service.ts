@@ -23,7 +23,11 @@ const planInclude = {
 
 type PlanWithActivities = PlanGetPayload<{ include: typeof planInclude }>;
 
-export async function createPlan(prisma: PrismaClient, userId: string, input: CreatePlanInput) {
+export async function createPlan(
+  prisma: PrismaClient,
+  userId: string,
+  input: CreatePlanInput,
+) {
   await ensureActivitiesExist(prisma, input.activityIds);
 
   const plan = await prisma.plan.create({
@@ -114,6 +118,22 @@ export async function updatePlan(
   );
 
   return serializePlan(updated as PlanWithActivities);
+}
+
+export async function deletePlan(
+  prisma: PrismaClient,
+  id: string,
+  userId: string,
+) {
+  const plan = await getPlanById(prisma, id);
+
+  if (plan.userId !== userId) {
+    throw badRequest("Plan does not belong to you");
+  }
+
+  await prisma.plan.delete({ where: { id } });
+
+  return { id };
 }
 
 async function ensureActivitiesExist(

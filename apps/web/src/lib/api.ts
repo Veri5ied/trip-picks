@@ -34,6 +34,8 @@ export interface ListResponse {
 export interface ActivityFilters {
   q?: string;
   category?: string;
+  area?: string;
+  priceLevel?: number;
   page?: number;
   limit?: number;
 }
@@ -65,12 +67,18 @@ export async function fetchActivities(
 }
 
 export async function signup(email: string, password: string) {
-  const { data } = await api.post<{ data: User }>("/auth/signup", { email, password });
+  const { data } = await api.post<{ data: User }>("/auth/signup", {
+    email,
+    password,
+  });
   return data.data;
 }
 
 export async function login(email: string, password: string) {
-  const { data } = await api.post<{ data: User }>("/auth/login", { email, password });
+  const { data } = await api.post<{ data: User }>("/auth/login", {
+    email,
+    password,
+  });
   return data.data;
 }
 
@@ -116,6 +124,11 @@ export async function createPlan(input: {
 
 export async function getPlan(id: string) {
   const { data } = await api.get<{ data: Plan }>(`/plans/${id}`);
+  return data.data;
+}
+
+export async function deletePlan(id: string) {
+  const { data } = await api.delete<{ data: { id: string } }>(`/plans/${id}`);
   return data.data;
 }
 

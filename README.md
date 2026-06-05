@@ -87,10 +87,30 @@ Email:    demo@trip-picks.app
 Password: password123
 ```
 
+## What I'd improve next
+
+**Backend**
+- Add `position` field sorting to plan detail endpoint so reordered activities persist
+- Add `DELETE /favorites/:id` (currently only supports removing by activityId)
+- Add rate limiting and request validation error formatting
+- Seed more activities (15-20) with varied areas, categories, and price levels
+
+**Frontend**
+- Drag-to-reorder activities in the plan detail timeline using `@dnd-kit`
+- Embed a map (Leaflet) on the plan detail page showing pinned activity locations
+- Filter chips in the search bar: show active filters as removable chips below the search input
+- Activity modal: display all tags (first 3 are currently hidden)
+- Plan creation: disable the submit button visually when 0 activities selected (backend already blocks it)
+- Stagger-fade-in animation on the timeline stops when the plan detail page loads
+
+**UX**
+- Native-feeling bottom sheets on mobile for modals (auth, activity detail, filters)
+- Swipe gestures: swipe left on a plan card to delete, swipe right to mark as done (maybe I am overthinking it but should have a good ux imo)
+
 ## Tradeoffs
 
 - Rate limiting (single-user app)
-- No pagination needed at current scale but supported
+- No pagination needed at current scale but currently supported
 - Rating stored as `Float` (simpler than Decimal for JS interop)
 - Tags as Postgres text array
 - No user-creatable activities (read-only catalogue)

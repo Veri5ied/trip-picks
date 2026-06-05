@@ -32,6 +32,7 @@ const listQuerySchema = {
     q: { type: "string" },
     category: { type: "string" },
     area: { type: "string" },
+    priceLevel: { type: "integer" },
     page: { type: "integer", minimum: 1, default: 1 },
     limit: { type: "integer", minimum: 1, maximum: 100, default: 20 },
   },

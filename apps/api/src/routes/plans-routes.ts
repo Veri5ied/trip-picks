@@ -9,6 +9,7 @@ import {
   listPlans,
   getPlanById,
   updatePlan,
+  deletePlan,
 } from "../services/plans-service.js";
 import { requireAuth } from "../lib/auth-hook.js";
 
@@ -153,6 +154,37 @@ export async function plansRoutes(app: FastifyInstance) {
     },
   );
 
+  app.delete(
+    "/plans/:id",
+    {
+      preHandler: [requireAuth],
+      schema: {
+        tags: ["Plans"],
+        description: "Delete a plan",
+        params: idParamSchema,
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request) => {
+      const params = planParamsSchema.parse(request.params);
+      const result = await deletePlan(app.prisma, params.id, request.userId!);
+
+      return { data: result };
+    },
+  );
+
   app.patch(
     "/plans/:id",
     {
@@ -186,7 +218,12 @@ export async function plansRoutes(app: FastifyInstance) {
     async (request) => {
       const params = planParamsSchema.parse(request.params);
       const body = updatePlanSchema.parse(request.body);
-      const plan = await updatePlan(app.prisma, params.id, request.userId!, body);
+      const plan = await updatePlan(
+        app.prisma,
+        params.id,
+        request.userId!,
+        body,
+      );
 
       return {
         data: plan,

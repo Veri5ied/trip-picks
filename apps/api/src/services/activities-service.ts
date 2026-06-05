@@ -18,6 +18,7 @@ export async function listActivities(
     area: filters.area
       ? { equals: filters.area, mode: "insensitive" as const }
       : undefined,
+    priceLevel: filters.priceLevel ?? undefined,
     OR: q
       ? [
           { title: { contains: q, mode: "insensitive" as const } },

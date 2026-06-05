@@ -18,6 +18,8 @@ export default function Page() {
   const { data, isLoading } = useQuery({
     queryKey: ["activities", "all"],
     queryFn: () => fetchActivities({ limit: 100 }),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
   });
 
   const activities = useMemo(

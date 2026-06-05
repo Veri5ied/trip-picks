@@ -14,6 +14,8 @@ import ActivityModal from "@/components/activity-modal";
 export default function Page() {
   const router = useRouter();
   const [category, setCategory] = useState("All");
+  const [area, setArea] = useState("All");
+  const [priceLevel, setPriceLevel] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [modalId, setModalId] = useState<string | null>(null);
   const { saved, toggleSave } = useFavorites();
@@ -23,10 +25,12 @@ export default function Page() {
   const filters = useMemo(
     () => ({
       category: category === "All" ? undefined : category,
+      area: area === "All" ? undefined : area,
+      priceLevel: priceLevel ?? undefined,
       q: debouncedSearch || undefined,
       limit: 20,
     }),
-    [category, debouncedSearch],
+    [category, area, priceLevel, debouncedSearch],
   );
 
   const {
@@ -42,6 +46,8 @@ export default function Page() {
     queryFn: ({ pageParam }) =>
       fetchActivities({ ...filters, page: pageParam }),
     initialPageParam: 1,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.meta;
       return page < totalPages ? page + 1 : undefined;
@@ -58,6 +64,13 @@ export default function Page() {
     [modalId, activities],
   );
 
+  const activeLabel = useMemo(() => {
+    if (category !== "All") return category;
+    if (area !== "All") return area;
+    if (priceLevel !== null) return ["Budget", "Moderate", "Premium"][priceLevel - 1];
+    return null;
+  }, [category, area, priceLevel]);
+
   return (
     <div className="min-h-screen bg-[#111]">
       <TopBar
@@ -68,10 +81,17 @@ export default function Page() {
       />
       <div className="mx-auto max-w-225 px-6 pb-10 max-sm:px-3">
         <div className="flex items-center gap-2 pb-3">
-          <FilterPills selected={category} onSelect={setCategory} />
-          {category !== "All" && (
+          <FilterPills
+            category={category}
+            area={area}
+            priceLevel={priceLevel}
+            onCategoryChange={setCategory}
+            onAreaChange={setArea}
+            onPriceChange={setPriceLevel}
+          />
+          {activeLabel && (
             <span className="text-xs text-[#777]">
-              Showing <span className="text-white font-medium">{category}</span>
+              Showing <span className="text-white font-medium">{activeLabel}</span>
             </span>
           )}
         </div>

@@ -33,12 +33,16 @@ export default function Page() {
     queryKey: ["plans"],
     queryFn: fetchPlans,
     enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
   });
 
   const { data: activitiesData } = useQuery({
     queryKey: ["activities", "all"],
     queryFn: () => fetchActivities({ limit: 100 }),
     enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
   });
 
   const allActivities = activitiesData?.data ?? [];
@@ -121,7 +125,11 @@ export default function Page() {
                 </h2>
                 <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                   {group.plans.map((plan) => (
-                    <PlanCard key={plan.id} plan={plan} onSelect={() => {}} />
+                    <PlanCard
+                      key={plan.id}
+                      plan={plan}
+                      onSelect={() => router.push(`/plans/${plan.id}`)}
+                    />
                   ))}
                 </div>
               </div>
