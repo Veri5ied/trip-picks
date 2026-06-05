@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import type { Activity } from "@/lib/api";
 import ActivityCard from "./activity-card";
@@ -19,6 +19,28 @@ interface ActivityGridProps {
   isFetchingNextPage: boolean;
   onLoadMore: () => void;
   onRetry: () => void;
+}
+
+function useInView(ref: React.RefObject<HTMLDivElement | null>) {
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "100px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  return inView;
 }
 
 export default function ActivityGrid({
@@ -85,18 +107,14 @@ export default function ActivityGrid({
     <>
       <div className="masonry">
         {activities.map((a, i) => (
-          <div
-            key={a.id}
-            className="fade-in"
-            style={{ animationDelay: `${(i % 12) * 40}ms` }}
-          >
+          <FadeInCard key={a.id} index={i}>
             <ActivityCard
               activity={a}
               saved={saved.has(a.id)}
               onSave={onSave}
               onClick={onCardClick}
             />
-          </div>
+          </FadeInCard>
         ))}
       </div>
       {hasNextPage && (
@@ -110,5 +128,20 @@ export default function ActivityGrid({
         </div>
       )}
     </>
+  );
+}
+
+function FadeInCard({ children, index }: { children: React.ReactNode; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
+
+  return (
+    <div
+      ref={ref}
+      className={inView ? "fade-in" : "opacity-0"}
+      style={{ animationDelay: inView ? `${(index % 12) * 40}ms` : "0ms" }}
+    >
+      {children}
+    </div>
   );
 }

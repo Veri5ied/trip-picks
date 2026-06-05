@@ -66,8 +66,15 @@ export default function HomePage() {
         onSearchChange={setSearch}
         onSavedClick={() => router.push("/saved")}
       />
-      <FilterPills selected={category} onSelect={setCategory} />
       <div className="mx-auto max-w-225 px-6 pb-10 max-sm:px-3">
+        <div className="flex items-center gap-2 pb-3">
+          <FilterPills selected={category} onSelect={setCategory} />
+          {category !== "All" && (
+            <span className="text-xs text-[#777]">
+              Showing <span className="text-white font-medium">{category}</span>
+            </span>
+          )}
+        </div>
         <ActivityGrid
           activities={activities}
           saved={saved}

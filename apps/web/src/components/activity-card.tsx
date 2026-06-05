@@ -29,7 +29,7 @@ export default function ActivityCard({
 }: ActivityCardProps) {
   return (
     <div
-      className="relative cursor-pointer rounded-2xl overflow-hidden bg-card"
+      className="group relative cursor-pointer rounded-2xl overflow-hidden bg-card"
       onClick={() => onClick(activity.id)}
     >
       <div className="relative">
@@ -40,10 +40,17 @@ export default function ActivityCard({
           className="w-full block"
         />
         <div
+          className={`absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent pointer-events-none ${
+            alwaysShowSave
+              ? ""
+              : "opacity-0 group-hover:opacity-100 transition-opacity"
+          }`}
+        />
+        <div
           className={`absolute top-0 left-0 right-0 p-3 flex items-start pointer-events-auto ${
             alwaysShowSave
               ? ""
-              : "opacity-0 hover:opacity-100 transition-opacity"
+              : "opacity-0 group-hover:opacity-100 transition-opacity"
           }`}
           onClick={(e) => e.stopPropagation()}
         >

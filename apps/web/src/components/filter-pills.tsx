@@ -1,5 +1,8 @@
 "use client";
 
+import { useRef, useState, useEffect } from "react";
+import { SlidersHorizontal } from "lucide-react";
+
 const CATEGORIES = [
   "All",
   "Culture",
@@ -17,21 +20,57 @@ interface FilterPillsProps {
 }
 
 export default function FilterPills({ selected, onSelect }: FilterPillsProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  function select(cat: string) {
+    onSelect(cat);
+    setOpen(false);
+  }
+
   return (
-    <div className="flex flex-wrap justify-center gap-1.5 px-6 pb-4 max-sm:px-4 max-sm:pb-3">
-      {CATEGORIES.map((cat) => (
-        <button
-          key={cat}
-          onClick={() => onSelect(cat)}
-          className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors max-sm:px-3 max-sm:py-1.5 ${
-            selected === cat
-              ? "border-accent bg-accent text-white"
-              : "border-[#333] text-[#999] hover:border-[#555] hover:text-[#ddd]"
-          }`}
-        >
-          {cat}
-        </button>
-      ))}
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((p) => !p)}
+        className={`flex items-center justify-center size-10.5 rounded-full transition-colors max-sm:size-9 ${
+          selected !== "All"
+            ? "bg-accent text-white"
+            : "bg-[#2a2a2a] text-[#999] hover:bg-[#333] hover:text-white"
+        }`}
+        title="Filter"
+      >
+        <SlidersHorizontal size={18} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 w-44 rounded-xl bg-surface border border-[#333] shadow-xl overflow-hidden z-50">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => select(cat)}
+              className={`flex w-full items-center px-4 py-2.5 text-sm transition-colors ${
+                selected === cat
+                  ? "text-accent font-semibold"
+                  : "text-[#999] hover:bg-[#2a2a2a] hover:text-white"
+              }`}
+            >
+              {selected === cat && <span className="mr-2 text-accent">✓</span>}
+              {selected !== cat && <span className="mr-2 w-4" />}
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
