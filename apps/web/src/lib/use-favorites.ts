@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { goeyToast } from "goey-toast";
 import { fetchFavorites, addFavorite, removeFavorite } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -24,6 +25,7 @@ function writeLocal(ids: Set<string>) {
 export function useFavorites() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [saved, setSaved] = useState<Set<string>>(new Set());
 
   const { data: apiSaved = [] } = useQuery({
     queryKey: ["favorites"],
@@ -31,7 +33,17 @@ export function useFavorites() {
     enabled: !!user,
   });
 
-  const apiSavedIds = new Set(apiSaved.map((a) => a.id));
+  useEffect(() => {
+    if (user) {
+      setSaved(new Set(apiSaved.map((a) => a.id)));
+    }
+  }, [user, apiSaved]);
+
+  useEffect(() => {
+    if (!user) {
+      setSaved(readLocal());
+    }
+  }, [user]);
 
   const addMutation = useMutation({
     mutationFn: addFavorite,
@@ -46,22 +58,34 @@ export function useFavorites() {
   const toggleSave = useCallback(
     (id: string) => {
       if (user) {
-        if (apiSavedIds.has(id)) {
-          removeMutation.mutate(id);
-        } else {
-          addMutation.mutate(id);
-        }
+        setSaved((prev) => {
+          const next = new Set(prev);
+          if (next.has(id)) {
+            next.delete(id);
+            removeMutation.mutate(id);
+            goeyToast.success("Removed from saved");
+          } else {
+            next.add(id);
+            addMutation.mutate(id);
+            goeyToast.success("Saved to favorites");
+          }
+          return next;
+        });
       } else {
-        const next = new Set(readLocal());
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        writeLocal(next);
+        setSaved((prev) => {
+          const next = new Set(prev);
+          if (next.has(id)) {
+            next.delete(id);
+          } else {
+            next.add(id);
+          }
+          writeLocal(next);
+          return next;
+        });
       }
     },
-    [user, apiSavedIds, addMutation, removeMutation],
+    [user, addMutation, removeMutation],
   );
-
-  const saved = user ? apiSavedIds : readLocal();
 
   return { saved, toggleSave };
 }

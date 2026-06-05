@@ -92,7 +92,6 @@ export default function AuthModal({ onClose }: AuthModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-xl bg-[#2a2a2a] py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-[#666] focus:bg-[#333]"
-              autoFocus
             />
           </div>
 
