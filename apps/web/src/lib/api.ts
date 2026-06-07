@@ -92,6 +92,11 @@ export async function fetchMe() {
   return data.data;
 }
 
+export async function getActivity(id: string) {
+  const { data } = await api.get<{ data: Activity }>(`/activities/${id}`);
+  return data.data;
+}
+
 export async function fetchFavorites() {
   const { data } = await api.get<{ data: Activity[] }>("/favorites");
   return data.data;

@@ -1,9 +1,9 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { fetchActivities } from "@/lib/api";
+import { fetchActivities, getActivity } from "@/lib/api";
 import { useDebounce } from "@/lib/use-debounce";
 import { useFavorites } from "@/lib/use-favorites";
 import TopBar from "@/components/top-bar";
@@ -59,15 +59,18 @@ export default function Page() {
     [data],
   );
 
-  const modalActivity = useMemo(
-    () => (modalId ? (activities.find((a) => a.id === modalId) ?? null) : null),
-    [modalId, activities],
-  );
+  const { data: modalActivity, isLoading: modalLoading } = useQuery({
+    queryKey: ["activity", modalId],
+    queryFn: () => getActivity(modalId!),
+    enabled: !!modalId,
+    staleTime: 1000 * 60 * 5,
+  });
 
   const activeLabel = useMemo(() => {
     if (category !== "All") return category;
     if (area !== "All") return area;
-    if (priceLevel !== null) return ["Budget", "Moderate", "Premium"][priceLevel - 1];
+    if (priceLevel !== null)
+      return ["Budget", "Moderate", "Premium"][priceLevel - 1];
     return null;
   }, [category, area, priceLevel]);
 
@@ -91,7 +94,8 @@ export default function Page() {
           />
           {activeLabel && (
             <span className="text-xs text-[#777]">
-              Showing <span className="text-white font-medium">{activeLabel}</span>
+              Showing{" "}
+              <span className="text-white font-medium">{activeLabel}</span>
             </span>
           )}
         </div>
@@ -108,12 +112,13 @@ export default function Page() {
           onRetry={() => refetch()}
         />
       </div>
-      {modalActivity && (
+      {modalId && (
         <ActivityModal
           activity={modalActivity}
-          saved={saved.has(modalActivity.id)}
+          saved={saved.has(modalId)}
           onSave={toggleSave}
           onClose={() => setModalId(null)}
+          isLoading={modalLoading}
         />
       )}
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useParams } from "next/navigation";
 import DatePicker from "react-datepicker";
@@ -15,10 +15,19 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { getPlan, updatePlan, deletePlan, fetchActivities } from "@/lib/api";
+import {
+  getPlan,
+  updatePlan,
+  deletePlan,
+  getActivity,
+  fetchActivities,
+} from "@/lib/api";
+import type { Activity } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { priceLabel, imgUrl, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import ActivityModal from "@/components/activity-modal";
+import { useFavorites } from "@/lib/use-favorites";
 
 export default function PlanDetailPage() {
   const router = useRouter();
@@ -45,24 +54,29 @@ export default function PlanDetailPage() {
   const allActivities = activitiesData?.data ?? [];
 
   const isOwner = !!user && plan?.userId === user.id;
+  const { saved, toggleSave } = useFavorites();
 
-  const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [editDate, setEditDate] = useState("");
-  const [editNotes, setEditNotes] = useState("");
-  const [editActivityIds, setEditActivityIds] = useState<Set<string>>(
-    new Set(),
-  );
+  const [modalActivity, setModalActivity] = useState<Activity | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  function openEdit() {
-    if (!plan) return;
-    setEditName(plan.name);
-    setEditDate(plan.date);
-    setEditNotes(plan.notes ?? "");
-    setEditActivityIds(new Set(plan.activityIds));
-    setEditing(true);
+  interface EditDialogState {
+    name: string;
+    date: string;
+    notes: string;
+    activityIds: Set<string>;
   }
+
+  const [editDialog, setEditDialog] = useState<EditDialogState | null>(null);
+
+  const openEdit = useCallback(() => {
+    if (!plan) return;
+    setEditDialog({
+      name: plan.name,
+      date: plan.date,
+      notes: plan.notes ?? "",
+      activityIds: new Set(plan.activityIds),
+    });
+  }, [plan]);
 
   const updateMutation = useMutation({
     mutationFn: (input: {
@@ -74,7 +88,7 @@ export default function PlanDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan", planId] });
       queryClient.invalidateQueries({ queryKey: ["plans"] });
-      setEditing(false);
+      setEditDialog(null);
       toast.success("Plan updated");
     },
     onError: () => {
@@ -102,21 +116,24 @@ export default function PlanDetailPage() {
 
   function handleSaveEdit(e: React.FormEvent) {
     e.preventDefault();
-    if (!editName.trim() || !editDate || editActivityIds.size === 0) return;
+    if (!editDialog) return;
+    const { name, date, notes, activityIds } = editDialog;
+    if (!name.trim() || !date || activityIds.size === 0) return;
     updateMutation.mutate({
-      name: editName.trim(),
-      date: editDate,
-      notes: editNotes.trim() || undefined,
-      activityIds: [...editActivityIds],
+      name: name.trim(),
+      date,
+      notes: notes.trim() || undefined,
+      activityIds: [...activityIds],
     });
   }
 
   function toggleEditActivity(id: string) {
-    setEditActivityIds((prev) => {
-      const next = new Set(prev);
+    setEditDialog((prev) => {
+      if (!prev) return prev;
+      const next = new Set(prev.activityIds);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      return next;
+      return { ...prev, activityIds: next };
     });
   }
 
@@ -252,7 +269,10 @@ export default function PlanDetailPage() {
                         {String(idx + 1).padStart(2, "0")}
                       </span>
                     </div>
-                    <div className="flex-1 rounded-2xl bg-surface border border-[#2a2a2a] overflow-hidden hover:border-[#3a3a3a] transition-all">
+                    <div
+                      className="flex-1 rounded-2xl bg-surface border border-[#2a2a2a] overflow-hidden hover:border-[#3a3a3a] transition-all cursor-pointer"
+                      onClick={() => getActivity(a.id).then(setModalActivity)}
+                    >
                       <div className="relative h-36 max-sm:h-28">
                         <div
                           className="absolute inset-0 bg-cover bg-center"
@@ -266,7 +286,10 @@ export default function PlanDetailPage() {
                         </span>
                         {isOwner && (
                           <button
-                            onClick={() => handleRemoveActivity(a.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveActivity(a.id);
+                            }}
                             className="absolute top-3 right-3 flex items-center justify-center size-7 rounded-full bg-black/50 text-[#ccc] hover:bg-red-500/80 hover:text-white transition-colors"
                           >
                             <X size={14} />
@@ -306,11 +329,11 @@ export default function PlanDetailPage() {
         </div>
       </div>
 
-      {editing && (
+      {editDialog && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setEditing(false);
+            if (e.target === e.currentTarget) setEditDialog(null);
           }}
         >
           <form
@@ -321,7 +344,7 @@ export default function PlanDetailPage() {
               <h2 className="text-lg font-bold">Edit plan</h2>
               <button
                 type="button"
-                onClick={() => setEditing(false)}
+                onClick={() => setEditDialog(null)}
                 className="flex items-center justify-center size-8 rounded-xl bg-[#2a2a2a] text-[#999] hover:bg-[#333] hover:text-white transition-colors"
               >
                 <X size={18} />
@@ -334,8 +357,10 @@ export default function PlanDetailPage() {
                   Name
                 </label>
                 <input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
+                  value={editDialog.name}
+                  onChange={(e) =>
+                    setEditDialog({ ...editDialog, name: e.target.value })
+                  }
                   placeholder="e.g. Saturday adventure"
                   className="w-full rounded-xl bg-card border border-[#333] px-4 py-2.5 text-sm text-white outline-none placeholder:text-[#555] focus:border-accent transition-colors"
                   required
@@ -347,9 +372,12 @@ export default function PlanDetailPage() {
                   Date
                 </label>
                 <DatePicker
-                  selected={editDate ? new Date(editDate) : null}
+                  selected={editDialog.date ? new Date(editDialog.date) : null}
                   onChange={(d: Date | null) =>
-                    setEditDate(d ? d.toISOString().slice(0, 10) : "")
+                    setEditDialog({
+                      ...editDialog,
+                      date: d ? d.toISOString().slice(0, 10) : "",
+                    })
                   }
                   dateFormat="MMM d, yyyy"
                   placeholderText="Select a date"
@@ -364,7 +392,7 @@ export default function PlanDetailPage() {
                 <label className="block text-sm font-medium text-[#bbb] mb-1.5">
                   Activities{" "}
                   <span className="text-[#555]">
-                    ({editActivityIds.size} selected)
+                    ({editDialog.activityIds.size} selected)
                   </span>
                 </label>
                 <div className="max-h-44 overflow-y-auto rounded-xl bg-card border border-[#333] p-1 space-y-0.5">
@@ -379,19 +407,19 @@ export default function PlanDetailPage() {
                       type="button"
                       onClick={() => toggleEditActivity(a.id)}
                       className={`flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                        editActivityIds.has(a.id)
+                        editDialog.activityIds.has(a.id)
                           ? "bg-accent/15 text-white"
                           : "text-[#999] hover:bg-[#2a2a2a]"
                       }`}
                     >
                       <span
                         className={`shrink-0 size-5 rounded-md border-2 flex items-center justify-center transition-colors ${
-                          editActivityIds.has(a.id)
+                          editDialog.activityIds.has(a.id)
                             ? "border-accent bg-accent"
                             : "border-[#555]"
                         }`}
                       >
-                        {editActivityIds.has(a.id) && (
+                        {editDialog.activityIds.has(a.id) && (
                           <span className="text-white text-[10px] font-bold">
                             ✓
                           </span>
@@ -411,8 +439,10 @@ export default function PlanDetailPage() {
                   Notes <span className="text-[#555]">(optional)</span>
                 </label>
                 <textarea
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
+                  value={editDialog.notes}
+                  onChange={(e) =>
+                    setEditDialog({ ...editDialog, notes: e.target.value })
+                  }
                   rows={3}
                   placeholder="Any notes for this plan"
                   className="w-full rounded-xl bg-card border border-[#333] px-4 py-2.5 text-sm text-white outline-none placeholder:text-[#555] focus:border-accent transition-colors resize-none"
@@ -423,7 +453,7 @@ export default function PlanDetailPage() {
             <div className="flex gap-3 mt-6">
               <button
                 type="button"
-                onClick={() => setEditing(false)}
+                onClick={() => setEditDialog(null)}
                 className="flex-1 rounded-xl bg-[#2a2a2a] py-2.5 text-sm font-semibold text-white hover:bg-[#333] transition-colors"
               >
                 Cancel
@@ -431,9 +461,9 @@ export default function PlanDetailPage() {
               <button
                 type="submit"
                 disabled={
-                  !editName.trim() ||
-                  !editDate ||
-                  editActivityIds.size === 0 ||
+                  !editDialog.name.trim() ||
+                  !editDialog.date ||
+                  editDialog.activityIds.size === 0 ||
                   updateMutation.isPending
                 }
                 className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-semibold text-white hover:bg-[#059a5c] transition-colors disabled:opacity-40 shadow-lg shadow-accent/20"
@@ -443,6 +473,15 @@ export default function PlanDetailPage() {
             </div>
           </form>
         </div>
+      )}
+
+      {modalActivity && (
+        <ActivityModal
+          activity={modalActivity}
+          saved={saved.has(modalActivity.id)}
+          onSave={toggleSave}
+          onClose={() => setModalActivity(null)}
+        />
       )}
     </div>
   );

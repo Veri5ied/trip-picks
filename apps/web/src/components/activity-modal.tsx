@@ -24,10 +24,11 @@ import { fetchPlans, updatePlan, createPlan } from "@/lib/api";
 import { toast } from "sonner";
 
 interface ActivityModalProps {
-  activity: Activity;
+  activity?: Activity | null;
   saved: boolean;
   onSave: (id: string) => void;
   onClose: () => void;
+  isLoading?: boolean;
 }
 
 export default function ActivityModal({
@@ -35,6 +36,7 @@ export default function ActivityModal({
   saved,
   onSave,
   onClose,
+  isLoading,
 }: ActivityModalProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -43,13 +45,17 @@ export default function ActivityModal({
   const [showPlans, setShowPlans] = useState(false);
   const [planSearch, setPlanSearch] = useState("");
   const [creatingNew, setCreatingNew] = useState(false);
-  const [newName, setNewName] = useState(`${activity.title} & more`);
+  const [newName, setNewName] = useState("");
   const [newDate, setNewDate] = useState("");
   const [newNotes, setNewNotes] = useState("");
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
   }, []);
+
+  useEffect(() => {
+    if (activity && !newName) setNewName(`${activity.title} & more`);
+  }, [activity]);
 
   const { data: plans } = useQuery({
     queryKey: ["plans"],
@@ -78,13 +84,15 @@ export default function ActivityModal({
   });
 
   const createPlanMutation = useMutation({
-    mutationFn: () =>
-      createPlan({
+    mutationFn: () => {
+      if (!activity) throw new Error("No activity");
+      return createPlan({
         name: newName.trim() || `${activity.title} & more`,
         date: newDate || new Date().toISOString().slice(0, 10),
         activityIds: [activity.id],
         notes: newNotes.trim() || undefined,
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plans"] });
       toast.success("New plan created");
@@ -101,6 +109,7 @@ export default function ActivityModal({
   }
 
   function handleAddToPlan(planId: string, currentIds: string[]) {
+    if (!activity) return;
     if (currentIds.includes(activity.id)) {
       toast.info("Already in this plan");
       return;
@@ -110,6 +119,8 @@ export default function ActivityModal({
       activityIds: [...currentIds, activity.id],
     });
   }
+
+  const act = isLoading || !activity ? null : activity;
 
   return (
     <div
@@ -134,7 +145,7 @@ export default function ActivityModal({
           <div
             className="h-72 sm:h-full sm:min-h-95 bg-cover bg-center sm:rounded-l-3xl max-sm:rounded-t-3xl"
             style={{
-              backgroundImage: `url(${imgUrl(activity.imageUrl, 800, 85)})`,
+              backgroundImage: `url(${imgUrl(activity?.imageUrl ?? "", 800, 85)})`,
             }}
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent sm:rounded-l-3xl max-sm:rounded-t-3xl pointer-events-none" />
@@ -142,232 +153,261 @@ export default function ActivityModal({
 
         <div className="p-6 flex-1 flex flex-col max-sm:p-5">
           <div className="flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-accent mb-1">
-              {activity.category}
-            </p>
-            <h2 className="text-2xl font-bold leading-tight mb-3 max-sm:text-xl">
-              {activity.title}
-            </h2>
-
-            {showPlans ? (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <button
-                    onClick={() => {
-                      setShowPlans(false);
-                      setCreatingNew(false);
-                      setPlanSearch("");
-                    }}
-                    className="flex items-center justify-center size-7 rounded-lg bg-[#2a2a2a] text-[#999] hover:bg-[#333] hover:text-white transition-colors"
-                  >
-                    <ArrowLeft size={14} />
-                  </button>
-                  <p className="text-sm font-semibold">
-                    {creatingNew ? "New plan" : "Add to existing plan"}
-                  </p>
+            {!act ? (
+              <div className="space-y-4">
+                <div className="skel h-3 w-16 rounded-md" />
+                <div className="skel h-7 w-3/4 rounded-lg" />
+                <div className="grid grid-cols-2 gap-2.5">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="skel h-14 rounded-xl" />
+                  ))}
                 </div>
-
-                {creatingNew ? (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs text-[#777] mb-1">
-                        Name
-                      </label>
-                      <input
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        placeholder="e.g. Saturday adventure"
-                        className="w-full rounded-xl bg-card border border-[#333] px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-[#555] focus:border-accent transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#777] mb-1">
-                        Date
-                      </label>
-                      <DatePicker
-                        selected={newDate ? new Date(newDate) : null}
-                        onChange={(d: Date | null) =>
-                          setNewDate(d ? d.toISOString().slice(0, 10) : "")
-                        }
-                        dateFormat="MMM d, yyyy"
-                        placeholderText="Select a date"
-                        minDate={new Date()}
-                        className="w-full rounded-xl bg-card border border-[#333] px-3.5 py-2.5 text-sm text-white outline-none focus:border-accent cursor-pointer transition-colors"
-                        wrapperClassName="w-full"
-                        calendarClassName="!bg-[#1a1a1a] !border-[#333] !text-white"
-                        popperClassName="!bg-[#1a1a1a]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#777] mb-1">
-                        Notes <span className="text-[#555]">(optional)</span>
-                      </label>
-                      <textarea
-                        value={newNotes}
-                        onChange={(e) => setNewNotes(e.target.value)}
-                        rows={2}
-                        placeholder="Any notes"
-                        className="w-full rounded-xl bg-card border border-[#333] px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-[#555] focus:border-accent transition-colors resize-none"
-                      />
-                    </div>
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        onClick={() => setCreatingNew(false)}
-                        className="flex-1 rounded-xl bg-[#2a2a2a] py-2.5 text-sm font-medium text-white hover:bg-[#333] transition-colors"
-                      >
-                        Back
-                      </button>
-                      <button
-                        onClick={() => createPlanMutation.mutate()}
-                        disabled={createPlanMutation.isPending}
-                        className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white hover:bg-[#059a5c] transition-colors disabled:opacity-40"
-                      >
-                        {createPlanMutation.isPending
-                          ? "Creating..."
-                          : "Create"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="relative mb-2">
-                      <Search
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]"
-                      />
-                      <input
-                        value={planSearch}
-                        onChange={(e) => setPlanSearch(e.target.value)}
-                        placeholder="Search plans..."
-                        className="w-full rounded-xl bg-card border border-[#333] pl-9 pr-3.5 py-2.5 text-sm text-white outline-none placeholder:text-[#555] focus:border-accent transition-colors"
-                      />
-                    </div>
-                    {plans && plans.length > 0 ? (
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                        {plans
-                          .filter(
-                            (p) =>
-                              !planSearch ||
-                              p.name
-                                .toLowerCase()
-                                .includes(planSearch.toLowerCase()),
-                          )
-                          .map((p) => {
-                            const inPlan = p.activityIds.includes(activity.id);
-                            return (
-                              <button
-                                key={p.id}
-                                onClick={() =>
-                                  handleAddToPlan(p.id, p.activityIds)
-                                }
-                                disabled={addToPlanMutation.isPending || inPlan}
-                                className={`flex items-center gap-3 w-full rounded-xl bg-card border px-3.5 py-2.5 text-left transition-colors disabled:opacity-40 ${
-                                  inPlan
-                                    ? "border-accent/20"
-                                    : "border-[#333] hover:border-accent/40"
-                                }`}
-                              >
-                                <Calendar
-                                  size={14}
-                                  className="shrink-0 text-[#777]"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate">
-                                    {p.name}
-                                  </p>
-                                  <p className="text-[11px] text-[#777]">
-                                    {formatDate(p.date)} &middot;{" "}
-                                    {p.activities.length} activities
-                                  </p>
-                                </div>
-                                <span className="shrink-0 text-xs font-semibold text-accent">
-                                  {inPlan ? "Added" : "Add"}
-                                </span>
-                              </button>
-                            );
-                          })}
-                      </div>
-                    ) : plans && plans.length === 0 ? (
-                      <p className="text-xs text-[#777] text-center py-6">
-                        No plans yet
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {Array.from({ length: 2 }).map((_, i) => (
-                          <div key={i} className="skel h-14 rounded-xl" />
-                        ))}
-                      </div>
-                    )}
-                    <button
-                      onClick={() => setCreatingNew(true)}
-                      className="flex items-center gap-2 w-full rounded-xl bg-accent/10 border border-accent/30 px-3.5 py-3 mt-2 text-sm font-medium text-accent hover:bg-accent/20 transition-colors"
-                    >
-                      <Plus size={14} />
-                      Create a new plan
-                    </button>
-                  </>
-                )}
+                <div className="skel h-20 rounded-xl" />
+                <div className="flex gap-2">
+                  <div className="skel h-3 w-16 rounded-md" />
+                  <div className="skel h-3 w-20 rounded-md" />
+                </div>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-2.5 mb-4">
-                  <div className="flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5">
-                    <Star size={14} className="text-[#f5b342] shrink-0" />
-                    <div>
-                      <p className="text-xs text-[#777] leading-tight">
-                        Rating
-                      </p>
-                      <p className="text-sm font-semibold text-white">
-                        {activity.rating}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5">
-                    <Clock size={14} className="text-[#999] shrink-0" />
-                    <div>
-                      <p className="text-xs text-[#777] leading-tight">
-                        Duration
-                      </p>
-                      <p className="text-sm font-semibold text-white">
-                        {activity.durationMinutes} min
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5">
-                    <MapPin size={14} className="text-[#999] shrink-0" />
-                    <div>
-                      <p className="text-xs text-[#777] leading-tight">Area</p>
-                      <p className="text-sm font-semibold text-white">
-                        {activity.area}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5">
-                    <DollarSign size={14} className="text-[#999] shrink-0" />
-                    <div>
-                      <p className="text-xs text-[#777] leading-tight">Price</p>
-                      <p className="text-sm font-semibold text-white">
-                        {priceLabel(activity.priceLevel)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-sm leading-relaxed text-[#bbb] mb-4">
-                  {activity.description}
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-accent mb-1">
+                  {act.category}
                 </p>
+                <h2 className="text-2xl font-bold leading-tight mb-3 max-sm:text-xl">
+                  {act.title}
+                </h2>
 
-                {activity.tags.length > 3 && (
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {activity.tags.slice(3).map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-lg bg-[#2a2a2a] px-3 py-1.5 text-xs text-[#ccc]"
+                {showPlans ? (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <button
+                        onClick={() => {
+                          setShowPlans(false);
+                          setCreatingNew(false);
+                          setPlanSearch("");
+                        }}
+                        className="flex items-center justify-center size-7 rounded-lg bg-[#2a2a2a] text-[#999] hover:bg-[#333] hover:text-white transition-colors"
                       >
-                        {t}
-                      </span>
-                    ))}
+                        <ArrowLeft size={14} />
+                      </button>
+                      <p className="text-sm font-semibold">
+                        {creatingNew ? "New plan" : "Add to existing plan"}
+                      </p>
+                    </div>
+
+                    {creatingNew ? (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs text-[#777] mb-1">
+                            Name
+                          </label>
+                          <input
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            placeholder="e.g. Saturday adventure"
+                            className="w-full rounded-xl bg-card border border-[#333] px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-[#555] focus:border-accent transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-[#777] mb-1">
+                            Date
+                          </label>
+                          <DatePicker
+                            selected={newDate ? new Date(newDate) : null}
+                            onChange={(d: Date | null) =>
+                              setNewDate(d ? d.toISOString().slice(0, 10) : "")
+                            }
+                            dateFormat="MMM d, yyyy"
+                            placeholderText="Select a date"
+                            minDate={new Date()}
+                            className="w-full rounded-xl bg-card border border-[#333] px-3.5 py-2.5 text-sm text-white outline-none focus:border-accent cursor-pointer transition-colors"
+                            wrapperClassName="w-full"
+                            calendarClassName="!bg-[#1a1a1a] !border-[#333] !text-white"
+                            popperClassName="!bg-[#1a1a1a]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-[#777] mb-1">
+                            Notes{" "}
+                            <span className="text-[#555]">(optional)</span>
+                          </label>
+                          <textarea
+                            value={newNotes}
+                            onChange={(e) => setNewNotes(e.target.value)}
+                            rows={2}
+                            placeholder="Any notes"
+                            className="w-full rounded-xl bg-card border border-[#333] px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-[#555] focus:border-accent transition-colors resize-none"
+                          />
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            onClick={() => setCreatingNew(false)}
+                            className="flex-1 rounded-xl bg-[#2a2a2a] py-2.5 text-sm font-medium text-white hover:bg-[#333] transition-colors"
+                          >
+                            Back
+                          </button>
+                          <button
+                            onClick={() => createPlanMutation.mutate()}
+                            disabled={createPlanMutation.isPending}
+                            className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white hover:bg-[#059a5c] transition-colors disabled:opacity-40"
+                          >
+                            {createPlanMutation.isPending
+                              ? "Creating..."
+                              : "Create"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="relative mb-2">
+                          <Search
+                            size={14}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]"
+                          />
+                          <input
+                            value={planSearch}
+                            onChange={(e) => setPlanSearch(e.target.value)}
+                            placeholder="Search plans..."
+                            className="w-full rounded-xl bg-card border border-[#333] pl-9 pr-3.5 py-2.5 text-sm text-white outline-none placeholder:text-[#555] focus:border-accent transition-colors"
+                          />
+                        </div>
+                        {plans && plans.length > 0 ? (
+                          <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                            {plans
+                              .filter(
+                                (p) =>
+                                  !planSearch ||
+                                  p.name
+                                    .toLowerCase()
+                                    .includes(planSearch.toLowerCase()),
+                              )
+                              .map((p) => {
+                                const inPlan = p.activityIds.includes(act.id);
+                                return (
+                                  <button
+                                    key={p.id}
+                                    onClick={() =>
+                                      handleAddToPlan(p.id, p.activityIds)
+                                    }
+                                    disabled={
+                                      addToPlanMutation.isPending || inPlan
+                                    }
+                                    className={`flex items-center gap-3 w-full rounded-xl bg-card border px-3.5 py-2.5 text-left transition-colors disabled:opacity-40 ${
+                                      inPlan
+                                        ? "border-accent/20"
+                                        : "border-[#333] hover:border-accent/40"
+                                    }`}
+                                  >
+                                    <Calendar
+                                      size={14}
+                                      className="shrink-0 text-[#777]"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">
+                                        {p.name}
+                                      </p>
+                                      <p className="text-[11px] text-[#777]">
+                                        {formatDate(p.date)} &middot;{" "}
+                                        {p.activities.length} activities
+                                      </p>
+                                    </div>
+                                    <span className="shrink-0 text-xs font-semibold text-accent">
+                                      {inPlan ? "Added" : "Add"}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        ) : plans && plans.length === 0 ? (
+                          <p className="text-xs text-[#777] text-center py-6">
+                            No plans yet
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {Array.from({ length: 2 }).map((_, i) => (
+                              <div key={i} className="skel h-14 rounded-xl" />
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setCreatingNew(true)}
+                          className="flex items-center gap-2 w-full rounded-xl bg-accent/10 border border-accent/30 px-3.5 py-3 mt-2 text-sm font-medium text-accent hover:bg-accent/20 transition-colors"
+                        >
+                          <Plus size={14} />
+                          Create a new plan
+                        </button>
+                      </>
+                    )}
                   </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-2.5 mb-4">
+                      <div className="flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5">
+                        <Star size={14} className="text-[#f5b342] shrink-0" />
+                        <div>
+                          <p className="text-xs text-[#777] leading-tight">
+                            Rating
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {act.rating}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5">
+                        <Clock size={14} className="text-[#999] shrink-0" />
+                        <div>
+                          <p className="text-xs text-[#777] leading-tight">
+                            Duration
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {act.durationMinutes} min
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5">
+                        <MapPin size={14} className="text-[#999] shrink-0" />
+                        <div>
+                          <p className="text-xs text-[#777] leading-tight">
+                            Area
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {act.area}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5">
+                        <DollarSign
+                          size={14}
+                          className="text-[#999] shrink-0"
+                        />
+                        <div>
+                          <p className="text-xs text-[#777] leading-tight">
+                            Price
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {priceLabel(act.priceLevel)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-sm leading-relaxed text-[#bbb] mb-4">
+                      {act.description}
+                    </p>
+
+                    {act.tags.length > 3 && (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {act.tags.slice(3).map((t) => (
+                          <span
+                            key={t}
+                            className="rounded-lg bg-[#2a2a2a] px-3 py-1.5 text-xs text-[#ccc]"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
@@ -377,7 +417,7 @@ export default function ActivityModal({
             <div className="flex gap-2.5 pt-4 border-t border-[#2a2a2a]">
               <button
                 onClick={() => {
-                  onSave(activity.id);
+                  onSave(act ? act.id : "");
                   if (!saved) close();
                 }}
                 className={`flex-1 rounded-full py-3 text-sm font-semibold transition-colors ${
@@ -391,7 +431,8 @@ export default function ActivityModal({
               {user && (
                 <button
                   onClick={() => setShowPlans(true)}
-                  className="rounded-full py-3 px-4 bg-card text-[#ccc] hover:bg-[#2a2a2a] hover:text-white transition-colors"
+                  disabled={!act}
+                  className="rounded-full py-3 px-4 bg-card text-[#ccc] hover:bg-[#2a2a2a] hover:text-white transition-colors disabled:opacity-40"
                   title="Add to plan"
                 >
                   <CalendarPlus size={18} />
